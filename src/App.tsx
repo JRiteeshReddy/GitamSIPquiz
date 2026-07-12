@@ -19,15 +19,6 @@ interface RoundConfig {
   rightItems: ItemConfig[];
 }
 
-function generateRandomPosition() {
-  // Keep within 15% to 70% to ensure it stays well inside the circular plate (70vmin diameter)
-  return {
-    x: 15 + Math.random() * 55,
-    y: 15 + Math.random() * 55,
-    rotation: Math.random() * 360,
-  };
-}
-
 function App() {
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(1);
@@ -39,17 +30,46 @@ function App() {
     const targetIndex = Math.floor(Math.random() * ITEM_COUNT);
 
     const generateSideItems = (side: 'left' | 'right'): ItemConfig[] => {
-      return ICONS.map((Icon, index) => {
-        const pos = generateRandomPosition();
-        return {
+      const items: ItemConfig[] = [];
+      const positions: {x: number, y: number}[] = [];
+
+      ICONS.forEach((Icon, index) => {
+        let x = 0, y = 0, rotation = 0;
+        let isValid = false;
+        let attempts = 0;
+
+        // Try to find a non-overlapping position
+        while (!isValid && attempts < 100) {
+          // Keep within 10% to 70% to ensure it stays well inside the plate
+          x = 10 + Math.random() * 60;
+          y = 10 + Math.random() * 60;
+          rotation = Math.random() * 360;
+          isValid = true;
+
+          for (const pos of positions) {
+            const dx = x - pos.x;
+            const dy = y - pos.y;
+            // Minimum distance between centers to avoid overlap.
+            // Items are ~15% wide. Distance 18 means 18^2 = 324
+            if (dx * dx + dy * dy < 350) {
+              isValid = false;
+              break;
+            }
+          }
+          attempts++;
+        }
+
+        positions.push({ x, y });
+        items.push({
           id: index,
           Icon,
-          x: pos.x,
-          y: pos.y,
-          rotation: pos.rotation,
+          x,
+          y,
+          rotation,
           isTarget: side === targetSide && index === targetIndex,
-        };
+        });
       });
+      return items;
     };
 
     return {
