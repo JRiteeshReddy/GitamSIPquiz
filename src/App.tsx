@@ -91,11 +91,6 @@ function App() {
     }
   }, [gameState]);
 
-  const handleMissClick = useCallback(() => {
-    if (gameState !== 'playing') return;
-    setGameState('lose');
-  }, [gameState]);
-
   const nextRound = () => {
     if (gameState === 'lose') {
       setScore(0);
@@ -105,7 +100,7 @@ function App() {
   };
 
   const renderPlate = (items: ItemConfig[], side: 'left' | 'right') => (
-    <div className={`screen-half ${side === 'left' ? 'red' : 'blue'}`} onClick={handleMissClick}>
+    <div className={`screen-half ${side === 'left' ? 'red' : 'blue'}`}>
       <div className="plate">
         {items.map((item) => {
           const { Icon, x, y, rotation, isTarget } = item;
