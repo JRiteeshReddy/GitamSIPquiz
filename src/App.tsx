@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminView from './AdminView';
 import PlayerJoin from './PlayerJoin';
+import { preloadAssets } from './gameLogic';
 import './index.css';
 
 function App() {
@@ -9,6 +10,10 @@ function App() {
   const initialCode = match ? match[1].toUpperCase() : '';
 
   const [isAdmin, setIsAdmin] = useState(!initialCode && window.innerWidth >= 1024);
+
+  useEffect(() => {
+    preloadAssets();
+  }, []);
 
   useEffect(() => {
     if (initialCode) return;

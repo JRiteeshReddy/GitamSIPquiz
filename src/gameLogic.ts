@@ -1,6 +1,6 @@
 import type { ItemConfig, RoundConfig } from './types';
 
-const ALL_ASSETS = [
+export const ALL_ASSETS = [
   { normal: '/img/ball (1).png', target: '/img/ball (2).png', alt: 'ball' },
   { normal: '/img/banana (1).png', target: '/img/banana (2).png', alt: 'banana' },
   { normal: '/img/bottle (1).png', target: '/img/bottle (2).png', alt: 'bottle' },
@@ -9,7 +9,18 @@ const ALL_ASSETS = [
   { normal: "/img/phone' (1).png", target: "/img/phone' (2).png", alt: 'phone' },
   { normal: '/img/1.png', target: '/img/2.png', alt: 'item7' },
 ];
-const ITEM_COUNT = 7;
+export const ITEM_COUNT = 7;
+
+export function preloadAssets() {
+  if (typeof window !== 'undefined') {
+    ALL_ASSETS.forEach(asset => {
+      const img1 = new Image();
+      img1.src = asset.normal;
+      const img2 = new Image();
+      img2.src = asset.target;
+    });
+  }
+}
 
 export function shuffle<T>(array: T[]): T[] {
   const arr = [...array];
