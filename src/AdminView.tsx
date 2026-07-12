@@ -213,10 +213,23 @@ const AdminView: React.FC = () => {
               </button>
             </div>
           )}
-          {(gameState === 'playing' || gameState === 'round_end') && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '2rem', fontWeight: 'bold', color: timeLeft <= 10 ? '#FC665F' : '#fff' }}>
-              <Clock size={28} />
-              {formatTime(timeLeft)}
+          {(gameState === 'playing' || gameState === 'starting' || gameState === 'round_end') && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '2rem', fontWeight: 'bold', color: timeLeft <= 10 ? '#FC665F' : '#fff' }}>
+                <Clock size={28} />
+                {gameState === 'starting' ? '--:--' : formatTime(timeLeft)}
+              </div>
+              <button 
+                className="btn-primary" 
+                onClick={() => {
+                  if (timerRef.current) clearInterval(timerRef.current);
+                  setGameState('game_over');
+                  broadcast({ type: 'GAME_STATE', state: 'game_over' });
+                }} 
+                style={{ backgroundColor: '#FC665F', padding: '8px 16px', fontSize: '1rem' }}
+              >
+                End Game
+              </button>
             </div>
           )}
         </div>
