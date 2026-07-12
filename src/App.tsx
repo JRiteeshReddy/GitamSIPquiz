@@ -1,13 +1,21 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Car, Bike, PenTool, Book, Apple, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import './index.css';
 
-const ICONS = [Car, Bike, PenTool, Book, Apple];
+const ALL_ASSETS = [
+  { normal: '/img/ball (1).png', target: '/img/ball (2).png', alt: 'ball' },
+  { normal: '/img/banana (1).png', target: '/img/banana (2).png', alt: 'banana' },
+  { normal: '/img/bottle (1).png', target: '/img/bottle (2).png', alt: 'bottle' },
+  { normal: '/img/car (1).png', target: '/img/car (2).png', alt: 'car' },
+  { normal: '/img/clock (1).png', target: '/img/clock (2).png', alt: 'clock' },
+  { normal: "/img/phone' (1).png", target: "/img/phone' (2).png", alt: 'phone' },
+];
 const ITEM_COUNT = 5;
 
 interface ItemConfig {
   id: number;
-  Icon: React.ElementType;
+  src: string;
+  alt: string;
   x: number;
   y: number;
   rotation: number;
@@ -19,6 +27,16 @@ interface RoundConfig {
   rightItems: ItemConfig[];
 }
 
+// Fisher-Yates shuffle
+function shuffle<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function App() {
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(1);
@@ -28,19 +46,21 @@ function App() {
   const roundConfig = useMemo<RoundConfig>(() => {
     const targetSide = Math.random() > 0.5 ? 'left' : 'right';
     const targetIndex = Math.floor(Math.random() * ITEM_COUNT);
+    
+    // Pick 5 random assets for this round
+    const roundAssets = shuffle(ALL_ASSETS).slice(0, ITEM_COUNT);
 
     const generateSideItems = (side: 'left' | 'right'): ItemConfig[] => {
       const items: ItemConfig[] = [];
       const positions: {x: number, y: number}[] = [];
 
-      ICONS.forEach((Icon, index) => {
+      roundAssets.forEach((asset, index) => {
         let x = 0, y = 0, rotation = 0;
         let isValid = false;
         let attempts = 0;
 
         // Try to find a non-overlapping position
         while (!isValid && attempts < 100) {
-          // Keep within 10% to 70% to ensure it stays well inside the plate
           x = 10 + Math.random() * 60;
           y = 10 + Math.random() * 60;
           rotation = Math.random() * 360;
@@ -49,8 +69,6 @@ function App() {
           for (const pos of positions) {
             const dx = x - pos.x;
             const dy = y - pos.y;
-            // Minimum distance between centers to avoid overlap.
-            // Items are ~15% wide. Distance 18 means 18^2 = 324
             if (dx * dx + dy * dy < 350) {
               isValid = false;
               break;
@@ -60,13 +78,16 @@ function App() {
         }
 
         positions.push({ x, y });
+        const isTarget = side === targetSide && index === targetIndex;
+        
         items.push({
           id: index,
-          Icon,
+          src: isTarget ? asset.target : asset.normal,
+          alt: asset.alt,
           x,
           y,
           rotation,
-          isTarget: side === targetSide && index === targetIndex,
+          isTarget,
         });
       });
       return items;
@@ -103,13 +124,11 @@ function App() {
     <div className={`screen-half ${side === 'left' ? 'red' : 'blue'}`}>
       <div className="plate">
         {items.map((item) => {
-          const { Icon, x, y, rotation, isTarget } = item;
-          // Target item has a distinct color (e.g., bright green), normal items are white
-          const color = isTarget ? '#4ade80' : '#ffffff';
+          const { id, src, alt, x, y, rotation, isTarget } = item;
           
           return (
             <div
-              key={item.id}
+              key={id}
               className="game-object"
               style={{
                 left: `${x}%`,
@@ -118,9 +137,11 @@ function App() {
               }}
               onClick={(e) => handleItemClick(isTarget, e)}
             >
-              <Icon 
-                color={color} 
-                strokeWidth={isTarget ? 3 : 2} // Slightly thicker stroke for the target as well
+              <img 
+                src={src} 
+                alt={alt} 
+                draggable="false"
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               />
             </div>
           );
