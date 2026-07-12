@@ -36,6 +36,7 @@ const AdminView: React.FC = () => {
   // Timer State
   const [durationMinutes, setDurationMinutes] = useState(3);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [countdownValue, setCountdownValue] = useState(5);
   
   const peerRef = useRef<Peer | null>(null);
   const timerRef = useRef<number | null>(null);
@@ -87,10 +88,32 @@ const AdminView: React.FC = () => {
     }
   }, [timeLeft, gameState, broadcast]);
 
+  // Countdown Effect
+  useEffect(() => {
+    let interval: number;
+    if (gameState === 'starting') {
+      interval = window.setInterval(() => {
+        setCountdownValue(prev => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            setTimeLeft(durationMinutes * 60);
+            setGameState('playing');
+            broadcast({ type: 'GAME_STATE', state: 'playing' });
+            return 0;
+          }
+          broadcast({ type: 'COUNTDOWN_SYNC', count: prev - 1 });
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [gameState, durationMinutes, broadcast]);
+
   const startGame = () => {
-    setTimeLeft(durationMinutes * 60);
-    setGameState('playing');
-    broadcast({ type: 'GAME_STATE', state: 'playing' });
+    setGameState('starting');
+    setCountdownValue(5);
+    broadcast({ type: 'GAME_STATE', state: 'starting' });
+    broadcast({ type: 'COUNTDOWN_SYNC', count: 5 });
   };
 
   useEffect(() => {
@@ -208,6 +231,13 @@ const AdminView: React.FC = () => {
             <div style={{ textAlign: 'center' }}>
               <h1 style={{ color: '#fff', fontSize: '3rem', marginBottom: '20px' }}>Ready to Start?</h1>
               <p style={{ color: '#aaa', fontSize: '1.5rem' }}>Tell players to join using code <strong style={{ color: '#1CBDF9' }}>{lobbyCode}</strong></p>
+            </div>
+          ) : gameState === 'starting' ? (
+            <div style={{ textAlign: 'center' }}>
+              <h1 style={{ color: '#fff', fontSize: '4rem', marginBottom: '20px' }}>Get Ready!</h1>
+              <div style={{ fontSize: '10rem', color: '#4ade80', fontWeight: 'bold', textShadow: '0 0 20px rgba(74,222,128,0.5)' }}>
+                {countdownValue}
+              </div>
             </div>
           ) : gameState === 'game_over' ? (
             <div style={{ textAlign: 'center' }}>

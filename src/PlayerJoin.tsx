@@ -26,6 +26,7 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
   const [roundConfig, setRoundConfig] = useState<RoundConfig | null>(null);
   const [overlayMessage, setOverlayMessage] = useState<{ title: string; isWin: boolean } | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [countdownValue, setCountdownValue] = useState<number | null>(null);
   const [finalLeaderboard, setFinalLeaderboard] = useState<PlayerScore[]>([]);
   
   const connRef = useRef<DataConnection | null>(null);
@@ -67,7 +68,11 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
               setRoundConfig(null);
               setOverlayMessage(null);
               setTimeLeft(null);
+              setCountdownValue(null);
             }
+            break;
+          case 'COUNTDOWN_SYNC':
+            setCountdownValue(msg.count);
             break;
           case 'TIMER_SYNC':
             setTimeLeft(msg.timeLeft);
@@ -126,6 +131,17 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
           <h1 style={{ color: '#4ade80', fontSize: '4rem', margin: '20px 0' }}>{myScore} <span style={{ fontSize: '1.5rem', color: '#aaa' }}>pts</span></h1>
           {rank > 0 && <h3 style={{ color: '#1CBDF9' }}>Rank #{rank}</h3>}
           <p style={{ marginTop: '40px', color: '#666' }}>Look at the big screen for the final results.</p>
+        </div>
+      );
+    }
+
+    if (gameState === 'starting' && countdownValue !== null) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', padding: '20px', textAlign: 'center' }}>
+          <h1 style={{ color: '#fff', fontSize: '3rem', marginBottom: '20px' }}>GET READY!</h1>
+          <div style={{ fontSize: '8rem', color: '#4ade80', fontWeight: 'bold', textShadow: '0 0 20px rgba(74,222,128,0.5)' }}>
+            {countdownValue}
+          </div>
         </div>
       );
     }

@@ -1,4 +1,4 @@
-export type GameState = 'lobby' | 'playing' | 'round_end' | 'game_over';
+export type GameState = 'lobby' | 'starting' | 'playing' | 'round_end' | 'game_over';
 
 export interface ItemConfig {
   id: number;
@@ -26,7 +26,8 @@ export interface PlayerScore {
 export type HostMessage = 
   | { type: 'GAME_STATE'; state: GameState }
   | { type: 'LEADERBOARD'; players: PlayerScore[] }
-  | { type: 'TIMER_SYNC'; timeLeft: number };
+  | { type: 'TIMER_SYNC'; timeLeft: number }
+  | { type: 'COUNTDOWN_SYNC'; count: number };
 
 // Messages sent from Client to Host
 export type ClientMessage = 
