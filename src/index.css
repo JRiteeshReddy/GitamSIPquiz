@@ -106,8 +106,7 @@ body {
   width: 70vmin;
   height: 70vmin;
   border-radius: 50%;
-  background: var(--plate-bg) url('/img/plate.png') no-repeat center center;
-  background-size: cover;
+  background: var(--plate-bg);
   border: 2px solid var(--plate-border);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
