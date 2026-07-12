@@ -1,0 +1,80 @@
+import React from 'react';
+import type { ItemConfig, RoundConfig, GameState } from './types';
+
+interface GameViewProps {
+  roundConfig: RoundConfig;
+  onItemClick: (isTarget: boolean, e: React.MouseEvent) => void;
+  gameState: GameState;
+  resultMessage: { title: string; isWin: boolean } | null;
+  onNextRound?: () => void;
+  isHost?: boolean; // If true, show next round button directly in GameView overlay
+}
+
+const GameView: React.FC<GameViewProps> = ({ 
+  roundConfig, 
+  onItemClick, 
+  gameState, 
+  resultMessage,
+  onNextRound,
+  isHost = false
+}) => {
+  const renderPlate = (items: ItemConfig[], side: 'left' | 'right') => (
+    <div className={`screen-half ${side === 'left' ? 'blue' : 'red'}`}>
+      <div className="plate">
+        {items.map((item) => {
+          const { id, src, alt, x, y, rotation, isTarget } = item;
+          return (
+            <div
+              key={id}
+              className="game-object"
+              style={{
+                left: `${x}%`,
+                top: `${y}%`,
+                transform: `rotate(${rotation}deg)`,
+              }}
+              onClick={(e) => onItemClick(isTarget, e)}
+            >
+              <img 
+                src={src} 
+                alt={alt} 
+                draggable="false"
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  return (
+    <div id="game-container">
+      {renderPlate(roundConfig.leftItems, 'left')}
+      {renderPlate(roundConfig.rightItems, 'right')}
+
+      <div className={`message-overlay ${gameState !== 'playing' && gameState !== 'lobby' ? 'visible' : ''}`}>
+        <div className="message-content">
+          {resultMessage && (
+            <>
+              <h2 className={`message-title ${resultMessage.isWin ? 'win' : 'lose'}`}>
+                {resultMessage.title}
+              </h2>
+              {isHost && onNextRound && (
+                <button className="btn-primary" onClick={onNextRound}>
+                  {resultMessage.isWin ? 'Next Round' : 'Continue'}
+                </button>
+              )}
+              {!isHost && (
+                <p style={{ fontSize: '1.5rem', opacity: 0.8, marginTop: '1rem' }}>
+                  Waiting for host...
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default GameView;
