@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Car, Bike, PenTool, Book, Apple, RotateCcw } from 'lucide-react';
 import './index.css';
 
