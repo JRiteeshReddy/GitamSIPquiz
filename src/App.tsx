@@ -8,8 +8,9 @@ const ALL_ASSETS = [
   { normal: '/img/car (1).png', target: '/img/car (2).png', alt: 'car' },
   { normal: '/img/clock (1).png', target: '/img/clock (2).png', alt: 'clock' },
   { normal: "/img/phone' (1).png", target: "/img/phone' (2).png", alt: 'phone' },
+  { normal: '/img/1.png', target: '/img/2.png', alt: 'item7' },
 ];
-const ITEM_COUNT = 5;
+const ITEM_COUNT = 7;
 
 interface ItemConfig {
   id: number;
@@ -51,24 +52,40 @@ function App() {
 
     const generateSideItems = (side: 'left' | 'right'): ItemConfig[] => {
       const items: ItemConfig[] = [];
-      const positions: {x: number, y: number}[] = [];
+      const positions: {cx: number, cy: number}[] = [];
 
       roundAssets.forEach((asset, index) => {
         let x = 0, y = 0, rotation = 0;
         let isValid = false;
         let attempts = 0;
 
-        // Try to find a non-overlapping position
-        while (!isValid && attempts < 100) {
-          x = 10 + Math.random() * 60;
-          y = 10 + Math.random() * 60;
+        // Item width is 22%, radius is 11%
+        const itemRadius = 11;
+        
+        // Try to find a non-overlapping position within the circle
+        while (!isValid && attempts < 500) {
+          x = Math.random() * (100 - itemRadius * 2);
+          y = Math.random() * (100 - itemRadius * 2);
           rotation = Math.random() * 360;
           isValid = true;
 
+          const cx = x + itemRadius;
+          const cy = y + itemRadius;
+          
+          // Check if it's outside the plate circle (radius 50)
+          const distFromCenter = (cx - 50) * (cx - 50) + (cy - 50) * (cy - 50);
+          if (distFromCenter > (50 - itemRadius) * (50 - itemRadius)) {
+            isValid = false;
+            attempts++;
+            continue;
+          }
+
           for (const pos of positions) {
-            const dx = x - pos.x;
-            const dy = y - pos.y;
-            if (dx * dx + dy * dy < 350) {
+            const dx = cx - pos.cx;
+            const dy = cy - pos.cy;
+            // Minimum distance squared (22^2 = 484)
+            // Use 400 to allow very slight visual overlap if tightly packed
+            if (dx * dx + dy * dy < 400) {
               isValid = false;
               break;
             }
@@ -76,7 +93,7 @@ function App() {
           attempts++;
         }
 
-        positions.push({ x, y });
+        positions.push({ cx: x + itemRadius, cy: y + itemRadius });
         const isVisualTarget = side === targetSide && index === targetIndex;
         const isCorrectItem = index === targetIndex;
         
