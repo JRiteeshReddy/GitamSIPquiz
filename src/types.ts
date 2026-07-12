@@ -27,7 +27,8 @@ export type HostMessage =
   | { type: 'GAME_STATE'; state: GameState }
   | { type: 'ROUND_CONFIG'; config: RoundConfig }
   | { type: 'ROUND_RESULT'; message: string; isWin: boolean }
-  | { type: 'LEADERBOARD'; players: PlayerScore[] };
+  | { type: 'LEADERBOARD'; players: PlayerScore[] }
+  | { type: 'TIMER_SYNC'; timeLeft: number };
 
 // Messages sent from Client to Host
 export type ClientMessage = 

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
 import { QRCodeSVG } from 'qrcode.react';
-import { QrCode, Copy, X } from 'lucide-react';
+import { QrCode, Copy, X, Clock, Play } from 'lucide-react';
 import type { GameState, HostMessage, ClientMessage, PlayerScore, RoundConfig, ItemConfig } from './types';
 import GameView from './GameView';
 
@@ -36,6 +36,12 @@ const generateRandomCode = () => {
   return result;
 };
 
+const formatTime = (seconds: number) => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+};
+
 interface ConnectedPlayer {
   id: string;
   name: string;
@@ -50,7 +56,19 @@ const AdminView: React.FC = () => {
   const [roundConfig, setRoundConfig] = useState<RoundConfig | null>(null);
   const [resultMessage, setResultMessage] = useState<{ title: string; isWin: boolean } | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
+  
+  // Timer State
+  const [durationMinutes, setDurationMinutes] = useState(3);
+  const [timeLeft, setTimeLeft] = useState(0);
+  
   const peerRef = useRef<Peer | null>(null);
+  const timerRef = useRef<number | null>(null);
+  const gameStateRef = useRef(gameState);
+  const timeLeftRef = useRef(timeLeft);
+
+  // Sync refs to state for use in callbacks
+  useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
+  useEffect(() => { timeLeftRef.current = timeLeft; }, [timeLeft]);
 
   const broadcast = useCallback((msg: HostMessage) => {
     setPlayers(prev => {
@@ -64,79 +82,38 @@ const AdminView: React.FC = () => {
     currentPlayers.forEach(p => p.conn.send({ type: 'LEADERBOARD', players: leaderboard }));
   }, []);
 
+  // Timer Tick Effect
   useEffect(() => {
-    const code = generateRandomCode();
-    setLobbyCode(code);
-    const peer = new Peer(`gitam-crowd-${code}`);
-    peerRef.current = peer;
-
-    peer.on('open', (id) => {
-      console.log('Host connected with ID:', id);
-    });
-
-    peer.on('connection', (conn) => {
-      conn.on('data', (data: any) => {
-        const msg = data as ClientMessage;
-        
-        if (msg.type === 'JOIN') {
-          setPlayers(prev => {
-            // Prevent duplicates
-            if (prev.find(p => p.id === conn.peer)) return prev;
-            const newPlayer = { id: conn.peer, name: msg.name, score: 0, conn };
-            const nextPlayers = [...prev, newPlayer];
-            
-            // Send current state
-            conn.send({ type: 'GAME_STATE', state: gameState });
-            if (roundConfig) {
-              conn.send({ type: 'ROUND_CONFIG', config: roundConfig });
-            }
-            
-            // Broadcast updated leaderboard
-            broadcastLeaderboard(nextPlayers);
-            return nextPlayers;
-          });
-        }
-        
-        if (msg.type === 'ITEM_CLICKED' && gameState === 'playing') {
-          if (msg.isTarget) {
-            setGameState('round_end');
-            
-            setPlayers(prev => {
-              const nextPlayers = prev.map(p => p.id === conn.peer ? { ...p, score: p.score + 1 } : p);
-              
-              const winnerName = nextPlayers.find(p => p.id === conn.peer)?.name || 'Someone';
-              
-              const resultMsg = `${winnerName} found it!`;
-              setResultMessage({ title: resultMsg, isWin: true });
-              
-              // Broadcast to everyone
-              nextPlayers.forEach(p => {
-                p.conn.send({ type: 'GAME_STATE', state: 'round_end' });
-                p.conn.send({ type: 'ROUND_RESULT', message: p.id === conn.peer ? 'You won the round!' : `${winnerName} won the round!`, isWin: p.id === conn.peer });
-                p.conn.send({ type: 'LEADERBOARD', players: nextPlayers.map(np => ({ name: np.name, score: np.score })) });
-              });
-              
-              return nextPlayers;
-            });
+    if (gameState === 'playing' || gameState === 'round_end') {
+      timerRef.current = window.setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            if (timerRef.current) clearInterval(timerRef.current);
+            setGameState('game_over');
+            broadcast({ type: 'GAME_STATE', state: 'game_over' });
+            return 0;
           }
-        }
-      });
-
-      conn.on('close', () => {
-        setPlayers(prev => {
-          const next = prev.filter(p => p.id !== conn.peer);
-          broadcastLeaderboard(next);
-          return next;
+          return prev - 1;
         });
-      });
-    });
-
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
     return () => {
-      peer.destroy();
+      if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, []);
+  }, [gameState, broadcast]);
+
+  // Sync time to clients
+  useEffect(() => {
+    if ((gameState === 'playing' || gameState === 'round_end') && timeLeft > 0) {
+      broadcast({ type: 'TIMER_SYNC', timeLeft });
+    }
+  }, [timeLeft, gameState, broadcast]);
 
   const generateRound = useCallback(() => {
+    if (gameStateRef.current === 'game_over') return;
+
     const targetSide = Math.random() > 0.5 ? 'left' : 'right';
     const targetIndex = Math.floor(Math.random() * ITEM_COUNT);
     const roundAssets = shuffle(ALL_ASSETS).slice(0, ITEM_COUNT);
@@ -210,9 +187,82 @@ const AdminView: React.FC = () => {
     broadcast({ type: 'GAME_STATE', state: 'playing' });
   }, [broadcast]);
 
-  const handleHostItemClick = () => {
-    // Host doesn't play directly, just views.
+  const startGame = () => {
+    setTimeLeft(durationMinutes * 60);
+    generateRound();
   };
+
+  useEffect(() => {
+    const code = generateRandomCode();
+    setLobbyCode(code);
+    const peer = new Peer(`gitam-crowd-${code}`);
+    peerRef.current = peer;
+
+    peer.on('connection', (conn) => {
+      conn.on('data', (data: any) => {
+        const msg = data as ClientMessage;
+        
+        if (msg.type === 'JOIN') {
+          setPlayers(prev => {
+            if (prev.find(p => p.id === conn.peer)) return prev;
+            const newPlayer = { id: conn.peer, name: msg.name, score: 0, conn };
+            const nextPlayers = [...prev, newPlayer];
+            
+            conn.send({ type: 'GAME_STATE', state: gameStateRef.current });
+            if (roundConfig) {
+              conn.send({ type: 'ROUND_CONFIG', config: roundConfig });
+            }
+            if (timeLeftRef.current > 0) {
+              conn.send({ type: 'TIMER_SYNC', timeLeft: timeLeftRef.current });
+            }
+            
+            broadcastLeaderboard(nextPlayers);
+            return nextPlayers;
+          });
+        }
+        
+        if (msg.type === 'ITEM_CLICKED' && gameStateRef.current === 'playing') {
+          if (msg.isTarget) {
+            setGameState('round_end');
+            
+            setPlayers(prev => {
+              const nextPlayers = prev.map(p => p.id === conn.peer ? { ...p, score: p.score + 1 } : p);
+              const winnerName = nextPlayers.find(p => p.id === conn.peer)?.name || 'Someone';
+              
+              setResultMessage({ title: `${winnerName} found it!`, isWin: true });
+              
+              nextPlayers.forEach(p => {
+                p.conn.send({ type: 'GAME_STATE', state: 'round_end' });
+                p.conn.send({ type: 'ROUND_RESULT', message: p.id === conn.peer ? '+1 Point!' : `${winnerName} scored!`, isWin: p.id === conn.peer });
+                p.conn.send({ type: 'LEADERBOARD', players: nextPlayers.map(np => ({ name: np.name, score: np.score })) });
+              });
+              
+              return nextPlayers;
+            });
+
+            // Auto advance to next round after 500ms
+            setTimeout(() => {
+              if (timeLeftRef.current > 0) {
+                generateRound();
+              }
+            }, 800); // Wait just under a second to show the winner message briefly
+          }
+        }
+      });
+
+      conn.on('close', () => {
+        setPlayers(prev => {
+          const next = prev.filter(p => p.id !== conn.peer);
+          broadcastLeaderboard(next);
+          return next;
+        });
+      });
+    });
+
+    return () => {
+      peer.destroy();
+    };
+  }, [generateRound, broadcastLeaderboard, roundConfig]);
 
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
@@ -228,19 +278,13 @@ const AdminView: React.FC = () => {
           </div>
           {lobbyCode && (
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
-                className="admin-action-btn"
-                onClick={() => setShowQRModal(true)}
-              >
+              <button className="admin-action-btn" onClick={() => setShowQRModal(true)}>
                 <QrCode size={18} /> QR Code
               </button>
-              <button 
-                className="admin-action-btn"
-                onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/game/join/${lobbyCode}`);
-                  alert('Join link copied to clipboard!');
-                }}
-              >
+              <button className="admin-action-btn" onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/game/join/${lobbyCode}`);
+                alert('Join link copied to clipboard!');
+              }}>
                 <Copy size={18} /> Join Link
               </button>
             </div>
@@ -248,9 +292,30 @@ const AdminView: React.FC = () => {
         </div>
         <div>
           {gameState === 'lobby' && (
-            <button className="btn-primary" onClick={generateRound} disabled={players.length === 0}>
-              Start Game ({players.length} players)
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff' }}>
+                <Clock size={18} />
+                <span>Timer: </span>
+                <input 
+                  type="number" 
+                  min="1" 
+                  max="10" 
+                  value={durationMinutes} 
+                  onChange={(e) => setDurationMinutes(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))}
+                  style={{ width: '50px', background: '#111', color: '#fff', border: '1px solid #444', borderRadius: '5px', padding: '5px', textAlign: 'center' }}
+                />
+                <span> min</span>
+              </div>
+              <button className="btn-primary" onClick={startGame} disabled={players.length === 0} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Play size={18} /> Start Game
+              </button>
+            </div>
+          )}
+          {(gameState === 'playing' || gameState === 'round_end') && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '2rem', fontWeight: 'bold', color: timeLeft <= 10 ? '#FC665F' : '#fff' }}>
+              <Clock size={28} />
+              {formatTime(timeLeft)}
+            </div>
           )}
         </div>
       </div>
@@ -265,15 +330,27 @@ const AdminView: React.FC = () => {
               <h1 style={{ color: '#555' }}>Waiting for players...</h1>
               <p>Tell players to join using code <strong>{lobbyCode}</strong></p>
             </div>
+          ) : gameState === 'game_over' ? (
+            <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+              <h1 style={{ fontSize: '4rem', color: '#FC665F', marginBottom: '20px' }}>Time's Up!</h1>
+              {sortedPlayers.length > 0 && (
+                <div style={{ textAlign: 'center' }}>
+                  <h2 style={{ fontSize: '2rem', color: '#4ade80' }}>Winner: {sortedPlayers[0].name}</h2>
+                  <p style={{ fontSize: '1.5rem', color: '#aaa' }}>with {sortedPlayers[0].score} points!</p>
+                </div>
+              )}
+              <button className="btn-primary" onClick={() => setGameState('lobby')} style={{ marginTop: '40px' }}>
+                Back to Lobby
+              </button>
+            </div>
           ) : (
             roundConfig && (
               <GameView 
                 roundConfig={roundConfig} 
-                onItemClick={handleHostItemClick} 
+                onItemClick={() => {}} 
                 gameState={gameState}
                 resultMessage={resultMessage}
                 isHost={true}
-                onNextRound={generateRound}
               />
             )
           )}

@@ -1,12 +1,19 @@
 import React, { useState, useRef } from 'react';
 import Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
-import type { GameState, HostMessage, RoundConfig } from './types';
+import type { GameState, HostMessage, RoundConfig, PlayerScore } from './types';
 import GameView from './GameView';
+import { Clock } from 'lucide-react';
 
 interface PlayerJoinProps {
   initialCode?: string;
 }
+
+const formatTime = (seconds: number) => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+};
 
 const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
   const [lobbyCode, setLobbyCode] = useState(initialCode);
@@ -17,6 +24,8 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
   const [gameState, setGameState] = useState<GameState>('lobby');
   const [roundConfig, setRoundConfig] = useState<RoundConfig | null>(null);
   const [resultMessage, setResultMessage] = useState<{ title: string; isWin: boolean } | null>(null);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [finalLeaderboard, setFinalLeaderboard] = useState<PlayerScore[]>([]);
   
   const connRef = useRef<DataConnection | null>(null);
 
@@ -52,9 +61,11 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
           case 'ROUND_RESULT':
             setResultMessage({ title: msg.message, isWin: msg.isWin });
             break;
+          case 'TIMER_SYNC':
+            setTimeLeft(msg.timeLeft);
+            break;
           case 'LEADERBOARD':
-            // Mobile client doesn't explicitly need to show leaderboard during game,
-            // but we could if requested. For now, it just plays the game.
+            setFinalLeaderboard(msg.players);
             break;
         }
       });
@@ -76,23 +87,66 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
     e.stopPropagation();
     if (gameState !== 'playing' || !connRef.current) return;
     
-    // Only send the click to host, host will decide if won
+    // Send click to host, host will broadcast ROUND_RESULT and auto-advance
     connRef.current.send({ type: 'ITEM_CLICKED', isTarget });
   };
 
-  if (status === 'connected' && roundConfig) {
-    return (
-      <GameView 
-        roundConfig={roundConfig}
-        onItemClick={handleItemClick}
-        gameState={gameState}
-        resultMessage={resultMessage}
-        isHost={false}
-      />
-    );
-  }
+  if (status === 'connected') {
+    if (gameState === 'game_over') {
+      const myScore = finalLeaderboard.find(p => p.name === playerName)?.score || 0;
+      const rank = finalLeaderboard.findIndex(p => p.name === playerName) + 1;
+      
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', padding: '20px', textAlign: 'center' }}>
+          <h1 style={{ color: '#FC665F', fontSize: '3rem', marginBottom: '10px' }}>Time's Up!</h1>
+          <h2 style={{ color: '#fff' }}>{playerName}</h2>
+          <h1 style={{ color: '#4ade80', fontSize: '4rem', margin: '20px 0' }}>{myScore} <span style={{ fontSize: '1.5rem', color: '#aaa' }}>pts</span></h1>
+          {rank > 0 && <h3 style={{ color: '#1CBDF9' }}>Rank #{rank}</h3>}
+          <p style={{ marginTop: '40px', color: '#666' }}>Look at the big screen for the final results.</p>
+        </div>
+      );
+    }
 
-  if (status === 'connected' && !roundConfig) {
+    if (roundConfig) {
+      return (
+        <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+          {/* Mobile Timer Overlay */}
+          {timeLeft !== null && (gameState === 'playing' || gameState === 'round_end') && (
+            <div style={{
+              position: 'absolute',
+              top: '20px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 1000,
+              background: 'rgba(0, 0, 0, 0.6)',
+              padding: '8px 20px',
+              borderRadius: '20px',
+              color: timeLeft <= 10 ? '#FC665F' : '#fff',
+              fontSize: '1.5rem',
+              fontWeight: 'bold',
+              backdropFilter: 'blur(5px)',
+              border: `1px solid ${timeLeft <= 10 ? '#FC665F' : '#444'}`,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
+            }}>
+              <Clock size={20} />
+              {formatTime(timeLeft)}
+            </div>
+          )}
+          
+          <GameView 
+            roundConfig={roundConfig}
+            onItemClick={handleItemClick}
+            gameState={gameState}
+            resultMessage={resultMessage}
+            isHost={false}
+          />
+        </div>
+      );
+    }
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111' }}>
         <h2>Connected!</h2>
