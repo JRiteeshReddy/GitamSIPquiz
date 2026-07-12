@@ -4,7 +4,6 @@ import type { DataConnection } from 'peerjs';
 import { QRCodeSVG } from 'qrcode.react';
 import { QrCode, Copy, X, Clock, Play } from 'lucide-react';
 import type { GameState, HostMessage, ClientMessage, PlayerScore, RoundConfig, ItemConfig } from './types';
-import GameView from './GameView';
 
 const ALL_ASSETS = [
   { normal: '/img/ball (1).png', target: '/img/ball (2).png', alt: 'ball' },
@@ -65,10 +64,12 @@ const AdminView: React.FC = () => {
   const timerRef = useRef<number | null>(null);
   const gameStateRef = useRef(gameState);
   const timeLeftRef = useRef(timeLeft);
+  const roundConfigRef = useRef(roundConfig);
 
   // Sync refs to state for use in callbacks
   useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
   useEffect(() => { timeLeftRef.current = timeLeft; }, [timeLeft]);
+  useEffect(() => { roundConfigRef.current = roundConfig; }, [roundConfig]);
 
   const broadcast = useCallback((msg: HostMessage) => {
     setPlayers(prev => {
@@ -209,8 +210,8 @@ const AdminView: React.FC = () => {
             const nextPlayers = [...prev, newPlayer];
             
             conn.send({ type: 'GAME_STATE', state: gameStateRef.current });
-            if (roundConfig) {
-              conn.send({ type: 'ROUND_CONFIG', config: roundConfig });
+            if (roundConfigRef.current) {
+              conn.send({ type: 'ROUND_CONFIG', config: roundConfigRef.current });
             }
             if (timeLeftRef.current > 0) {
               conn.send({ type: 'TIMER_SYNC', timeLeft: timeLeftRef.current });
@@ -262,7 +263,7 @@ const AdminView: React.FC = () => {
     return () => {
       peer.destroy();
     };
-  }, [generateRound, broadcastLeaderboard, roundConfig]);
+  }, []);
 
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
@@ -323,50 +324,58 @@ const AdminView: React.FC = () => {
       {/* Main Content Area */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         
-        {/* Game Preview */}
-        <div style={{ flex: 3, position: 'relative' }}>
+        {/* Left Side: Game Status / Dashboard */}
+        <div style={{ flex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
           {gameState === 'lobby' ? (
-            <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-              <h1 style={{ color: '#555' }}>Waiting for players...</h1>
-              <p>Tell players to join using code <strong>{lobbyCode}</strong></p>
+            <div style={{ textAlign: 'center' }}>
+              <h1 style={{ color: '#fff', fontSize: '3rem', marginBottom: '20px' }}>Ready to Start?</h1>
+              <p style={{ color: '#aaa', fontSize: '1.5rem' }}>Tell players to join using code <strong style={{ color: '#1CBDF9' }}>{lobbyCode}</strong></p>
             </div>
           ) : gameState === 'game_over' ? (
-            <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-              <h1 style={{ fontSize: '4rem', color: '#FC665F', marginBottom: '20px' }}>Time's Up!</h1>
+            <div style={{ textAlign: 'center' }}>
+              <h1 style={{ fontSize: '5rem', color: '#FC665F', marginBottom: '20px' }}>Time's Up!</h1>
               {sortedPlayers.length > 0 && (
-                <div style={{ textAlign: 'center' }}>
-                  <h2 style={{ fontSize: '2rem', color: '#4ade80' }}>Winner: {sortedPlayers[0].name}</h2>
-                  <p style={{ fontSize: '1.5rem', color: '#aaa' }}>with {sortedPlayers[0].score} points!</p>
+                <div>
+                  <h2 style={{ fontSize: '3rem', color: '#4ade80', marginBottom: '10px' }}>Winner: {sortedPlayers[0].name}</h2>
+                  <p style={{ fontSize: '2rem', color: '#aaa' }}>with {sortedPlayers[0].score} points!</p>
                 </div>
               )}
-              <button className="btn-primary" onClick={() => setGameState('lobby')} style={{ marginTop: '40px' }}>
+              <button className="btn-primary" onClick={() => {
+                setGameState('lobby');
+                broadcast({ type: 'GAME_STATE', state: 'lobby' });
+              }} style={{ marginTop: '40px', fontSize: '1.5rem', padding: '15px 40px' }}>
                 Back to Lobby
               </button>
             </div>
           ) : (
-            roundConfig && (
-              <GameView 
-                roundConfig={roundConfig} 
-                onItemClick={() => {}} 
-                gameState={gameState}
-                resultMessage={resultMessage}
-                isHost={true}
-              />
-            )
+            <div style={{ textAlign: 'center' }}>
+              <h1 style={{ color: '#fff', fontSize: '4rem', marginBottom: '20px' }}>Game in Progress</h1>
+              <p style={{ color: '#aaa', fontSize: '1.5rem' }}>Players are frantically finding items!</p>
+              {resultMessage && (
+                <div style={{ marginTop: '30px', padding: '20px', background: 'rgba(74, 222, 128, 0.2)', border: '2px solid #4ade80', borderRadius: '15px' }}>
+                  <h2 style={{ color: '#4ade80', margin: 0, fontSize: '2rem' }}>{resultMessage.title}</h2>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
-        {/* Live Leaderboard */}
-        <div style={{ flex: 1, backgroundColor: '#1a1a1a', borderLeft: '2px solid #333', padding: '20px', overflowY: 'auto' }}>
-          <h3 style={{ borderBottom: '1px solid #444', paddingBottom: '10px', marginBottom: '20px' }}>Live Leaderboard</h3>
+        {/* Right Side: Live Leaderboard */}
+        <div style={{ flex: 1, backgroundColor: '#1a1a1a', borderLeft: '2px solid #333', padding: '30px', overflowY: 'auto' }}>
+          <h2 style={{ borderBottom: '2px solid #444', paddingBottom: '15px', marginBottom: '25px', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            Live Leaderboard
+          </h2>
           {sortedPlayers.length === 0 ? (
-            <p style={{ color: '#666' }}>No players joined yet.</p>
+            <p style={{ color: '#666', fontSize: '1.2rem' }}>No players joined yet.</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               {sortedPlayers.map((p, idx) => (
-                <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', backgroundColor: '#2a2a2a', borderRadius: '8px' }}>
-                  <span><strong style={{ opacity: 0.5, marginRight: '10px' }}>#{idx+1}</strong> {p.name}</span>
-                  <strong style={{ color: '#4ade80' }}>{p.score}</strong>
+                <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', backgroundColor: idx === 0 ? 'rgba(74, 222, 128, 0.1)' : '#2a2a2a', border: idx === 0 ? '1px solid #4ade80' : '1px solid transparent', borderRadius: '10px', transition: 'all 0.3s' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: idx === 0 ? '#4ade80' : '#888' }}>#{idx+1}</span>
+                    <span style={{ fontSize: '1.2rem', color: '#fff' }}>{p.name}</span>
+                  </div>
+                  <strong style={{ color: '#1CBDF9', fontSize: '1.5rem' }}>{p.score}</strong>
                 </div>
               ))}
             </div>
