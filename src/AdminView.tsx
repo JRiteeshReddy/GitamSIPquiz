@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
 import { QRCodeSVG } from 'qrcode.react';
+import { QrCode, Copy, X } from 'lucide-react';
 import type { GameState, HostMessage, ClientMessage, PlayerScore, RoundConfig, ItemConfig } from './types';
 import GameView from './GameView';
 
@@ -48,6 +49,7 @@ const AdminView: React.FC = () => {
   const [players, setPlayers] = useState<ConnectedPlayer[]>([]);
   const [roundConfig, setRoundConfig] = useState<RoundConfig | null>(null);
   const [resultMessage, setResultMessage] = useState<{ title: string; isWin: boolean } | null>(null);
+  const [showQRModal, setShowQRModal] = useState(false);
   const peerRef = useRef<Peer | null>(null);
 
   const broadcast = useCallback((msg: HostMessage) => {
@@ -225,8 +227,22 @@ const AdminView: React.FC = () => {
             <p style={{ margin: 0, color: '#aaa' }}>Lobby Code: <strong style={{ fontSize: '1.5rem', color: '#ff3366', letterSpacing: '2px' }}>{lobbyCode}</strong></p>
           </div>
           {lobbyCode && (
-            <div style={{ background: '#fff', padding: '5px', borderRadius: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <QRCodeSVG value={`${window.location.origin}/game/join/${lobbyCode}`} size={64} />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button 
+                className="admin-action-btn"
+                onClick={() => setShowQRModal(true)}
+              >
+                <QrCode size={18} /> QR Code
+              </button>
+              <button 
+                className="admin-action-btn"
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/game/join/${lobbyCode}`);
+                  alert('Join link copied to clipboard!');
+                }}
+              >
+                <Copy size={18} /> Join Link
+              </button>
             </div>
           )}
         </div>
@@ -280,6 +296,24 @@ const AdminView: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Full Screen QR Modal */}
+      {showQRModal && (
+        <div className="qr-modal-overlay" onClick={() => setShowQRModal(false)}>
+          <div className="qr-modal-content" onClick={e => e.stopPropagation()}>
+            <button className="qr-modal-close" onClick={() => setShowQRModal(false)}>
+              <X size={24} />
+            </button>
+            <h2 style={{ color: '#fff', marginBottom: '20px' }}>Scan to Join</h2>
+            <div style={{ background: '#fff', padding: '20px', borderRadius: '15px' }}>
+              <QRCodeSVG value={`${window.location.origin}/game/join/${lobbyCode}`} size={300} />
+            </div>
+            <p style={{ color: '#aaa', marginTop: '20px', fontSize: '1.2rem', letterSpacing: '5px' }}>
+              {lobbyCode}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
