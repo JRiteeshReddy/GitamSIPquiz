@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
+import { QRCodeSVG } from 'qrcode.react';
 import type { GameState, HostMessage, ClientMessage, PlayerScore, RoundConfig, ItemConfig } from './types';
 import GameView from './GameView';
 
@@ -217,10 +218,17 @@ const AdminView: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', backgroundColor: '#111' }}>
       
       {/* Admin Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '20px', backgroundColor: '#222', borderBottom: '2px solid #333' }}>
-        <div>
-          <h2 style={{ margin: 0, color: '#fff' }}>Admin Panel</h2>
-          <p style={{ margin: 0, color: '#aaa' }}>Lobby Code: <strong style={{ fontSize: '1.5rem', color: '#ff3366', letterSpacing: '2px' }}>{lobbyCode}</strong></p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', backgroundColor: '#222', borderBottom: '2px solid #333' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div>
+            <h2 style={{ margin: 0, color: '#fff' }}>Admin Panel</h2>
+            <p style={{ margin: 0, color: '#aaa' }}>Lobby Code: <strong style={{ fontSize: '1.5rem', color: '#ff3366', letterSpacing: '2px' }}>{lobbyCode}</strong></p>
+          </div>
+          {lobbyCode && (
+            <div style={{ background: '#fff', padding: '5px', borderRadius: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <QRCodeSVG value={`${window.location.origin}/game/join/${lobbyCode}`} size={64} />
+            </div>
+          )}
         </div>
         <div>
           {gameState === 'lobby' && (

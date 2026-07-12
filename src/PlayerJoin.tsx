@@ -4,8 +4,12 @@ import type { DataConnection } from 'peerjs';
 import type { GameState, HostMessage, RoundConfig } from './types';
 import GameView from './GameView';
 
-const PlayerJoin: React.FC = () => {
-  const [lobbyCode, setLobbyCode] = useState('');
+interface PlayerJoinProps {
+  initialCode?: string;
+}
+
+const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
+  const [lobbyCode, setLobbyCode] = useState(initialCode);
   const [playerName, setPlayerName] = useState('');
   const [status, setStatus] = useState<'input' | 'connecting' | 'connected' | 'error'>('input');
   const [errorMsg, setErrorMsg] = useState('');
