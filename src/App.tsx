@@ -78,16 +78,17 @@ function App() {
         }
 
         positions.push({ x, y });
-        const isTarget = side === targetSide && index === targetIndex;
+        const isVisualTarget = side === targetSide && index === targetIndex;
+        const isCorrectItem = index === targetIndex;
         
         items.push({
           id: index,
-          src: isTarget ? asset.target : asset.normal,
+          src: isVisualTarget ? asset.target : asset.normal,
           alt: asset.alt,
           x,
           y,
           rotation,
-          isTarget,
+          isTarget: isCorrectItem,
         });
       });
       return items;
