@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { RotateCcw } from 'lucide-react';
 import './index.css';
 
 const ALL_ASSETS = [
@@ -153,12 +152,6 @@ function App() {
 
   return (
     <>
-      <div id="portrait-overlay">
-        <RotateCcw className="rotate-icon" color="#ffffff" />
-        <h1>Rotate Device</h1>
-        <p>Please turn your device to landscape mode to play.</p>
-      </div>
-
       <div id="game-container">
         <div className="score-board">
           Score: {score}

@@ -24,62 +24,21 @@ body {
   color: var(--text-color);
 }
 
-/* Portrait Overlay - Forces user to rotate device */
-#portrait-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: linear-gradient(135deg, #1a1a2e, #16213e);
-  z-index: 9999;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 2rem;
-}
 
-#portrait-overlay h1 {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-  font-weight: 800;
-  background: -webkit-linear-gradient(#ff3366, #3366ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-#portrait-overlay p {
-  font-size: 1.2rem;
-  opacity: 0.8;
-}
-
-.rotate-icon {
-  margin-top: 2rem;
-  width: 64px;
-  height: 64px;
-  animation: rotatePhone 2s infinite ease-in-out;
-}
-
-@keyframes rotatePhone {
-  0% { transform: rotate(0deg); }
-  50% { transform: rotate(90deg); }
-  100% { transform: rotate(90deg); }
-}
-
-@media screen and (orientation: portrait) {
-  #portrait-overlay {
-    display: flex;
-  }
-  #game-container {
-    display: none !important;
-  }
-}
 
 /* Game Layout */
 #game-container {
   display: flex;
+  flex-direction: row;
   width: 100vw;
   height: 100vh;
   position: relative;
+}
+
+@media screen and (orientation: portrait) {
+  #game-container {
+    flex-direction: column;
+  }
 }
 
 .screen-half {
@@ -100,6 +59,15 @@ body {
 .screen-half.blue {
   background: var(--blue-bg);
   box-shadow: inset 10px 0 30px rgba(0,0,0,0.1);
+}
+
+@media screen and (orientation: portrait) {
+  .screen-half.red {
+    box-shadow: inset 0 -10px 30px rgba(0,0,0,0.1);
+  }
+  .screen-half.blue {
+    box-shadow: inset 0 10px 30px rgba(0,0,0,0.1);
+  }
 }
 
 .plate {
