@@ -4,19 +4,13 @@ import type { ItemConfig, RoundConfig, GameState } from './types';
 interface GameViewProps {
   roundConfig: RoundConfig;
   onItemClick: (isTarget: boolean, e: React.MouseEvent) => void;
-  gameState: GameState;
   resultMessage: { title: string; isWin: boolean } | null;
-  onNextRound?: () => void;
-  isHost?: boolean; // If true, show next round button directly in GameView overlay
 }
 
 const GameView: React.FC<GameViewProps> = ({ 
   roundConfig, 
   onItemClick, 
-  gameState, 
-  resultMessage,
-  onNextRound,
-  isHost = false
+  resultMessage
 }) => {
   const renderPlate = (items: ItemConfig[], side: 'left' | 'right') => (
     <div className={`screen-half ${side === 'left' ? 'blue' : 'red'}`}>

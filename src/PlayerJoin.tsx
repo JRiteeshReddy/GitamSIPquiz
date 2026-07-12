@@ -162,9 +162,7 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
           <GameView 
             roundConfig={roundConfig}
             onItemClick={handleItemClick}
-            gameState={gameState}
             resultMessage={overlayMessage}
-            isHost={false}
           />
         </div>
       );
