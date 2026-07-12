@@ -52,23 +52,13 @@ const GameView: React.FC<GameViewProps> = ({
       {renderPlate(roundConfig.leftItems, 'left')}
       {renderPlate(roundConfig.rightItems, 'right')}
 
-      <div className={`message-overlay ${gameState !== 'playing' && gameState !== 'lobby' ? 'visible' : ''}`}>
+      <div className={`message-overlay ${resultMessage ? 'visible' : ''}`}>
         <div className="message-content">
           {resultMessage && (
             <>
               <h2 className={`message-title ${resultMessage.isWin ? 'win' : 'lose'}`}>
                 {resultMessage.title}
               </h2>
-              {isHost && onNextRound && (
-                <button className="btn-primary" onClick={onNextRound}>
-                  {resultMessage.isWin ? 'Next Round' : 'Continue'}
-                </button>
-              )}
-              {!isHost && (
-                <p style={{ fontSize: '1.5rem', opacity: 0.8, marginTop: '1rem' }}>
-                  Waiting for host...
-                </p>
-              )}
             </>
           )}
         </div>
