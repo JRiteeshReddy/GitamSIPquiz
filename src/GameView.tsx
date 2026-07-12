@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ItemConfig, RoundConfig, GameState } from './types';
+import type { ItemConfig, RoundConfig } from './types';
 
 interface GameViewProps {
   roundConfig: RoundConfig;
