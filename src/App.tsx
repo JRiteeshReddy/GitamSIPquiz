@@ -121,7 +121,7 @@ function App() {
   };
 
   const renderPlate = (items: ItemConfig[], side: 'left' | 'right') => (
-    <div className={`screen-half ${side === 'left' ? 'red' : 'blue'}`}>
+    <div className={`screen-half ${side === 'left' ? 'blue' : 'red'}`}>
       <div className="plate">
         {items.map((item) => {
           const { id, src, alt, x, y, rotation, isTarget } = item;
