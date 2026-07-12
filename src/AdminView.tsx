@@ -3,28 +3,7 @@ import Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
 import { QRCodeSVG } from 'qrcode.react';
 import { QrCode, Copy, X, Clock, Play } from 'lucide-react';
-import type { GameState, HostMessage, ClientMessage, PlayerScore, RoundConfig, ItemConfig } from './types';
-
-const ALL_ASSETS = [
-  { normal: '/img/ball (1).png', target: '/img/ball (2).png', alt: 'ball' },
-  { normal: '/img/banana (1).png', target: '/img/banana (2).png', alt: 'banana' },
-  { normal: '/img/bottle (1).png', target: '/img/bottle (2).png', alt: 'bottle' },
-  { normal: '/img/car (1).png', target: '/img/car (2).png', alt: 'car' },
-  { normal: '/img/clock (1).png', target: '/img/clock (2).png', alt: 'clock' },
-  { normal: "/img/phone' (1).png", target: "/img/phone' (2).png", alt: 'phone' },
-  { normal: '/img/1.png', target: '/img/2.png', alt: 'item7' },
-];
-const ITEM_COUNT = 7;
-
-// Fisher-Yates shuffle
-function shuffle<T>(array: T[]): T[] {
-  const arr = [...array];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
+import type { GameState, HostMessage, ClientMessage, PlayerScore } from './types';
 
 const generateRandomCode = () => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -52,8 +31,6 @@ const AdminView: React.FC = () => {
   const [lobbyCode, setLobbyCode] = useState('');
   const [gameState, setGameState] = useState<GameState>('lobby');
   const [players, setPlayers] = useState<ConnectedPlayer[]>([]);
-  const [roundConfig, setRoundConfig] = useState<RoundConfig | null>(null);
-  const [resultMessage, setResultMessage] = useState<{ title: string; isWin: boolean } | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
   
   // Timer State
@@ -64,12 +41,10 @@ const AdminView: React.FC = () => {
   const timerRef = useRef<number | null>(null);
   const gameStateRef = useRef(gameState);
   const timeLeftRef = useRef(timeLeft);
-  const roundConfigRef = useRef(roundConfig);
 
   // Sync refs to state for use in callbacks
   useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
   useEffect(() => { timeLeftRef.current = timeLeft; }, [timeLeft]);
-  useEffect(() => { roundConfigRef.current = roundConfig; }, [roundConfig]);
 
   const broadcast = useCallback((msg: HostMessage) => {
     setPlayers(prev => {
@@ -112,85 +87,10 @@ const AdminView: React.FC = () => {
     }
   }, [timeLeft, gameState, broadcast]);
 
-  const generateRound = useCallback(() => {
-    if (gameStateRef.current === 'game_over') return;
-
-    const targetSide = Math.random() > 0.5 ? 'left' : 'right';
-    const targetIndex = Math.floor(Math.random() * ITEM_COUNT);
-    const roundAssets = shuffle(ALL_ASSETS).slice(0, ITEM_COUNT);
-
-    const generateSideItems = (side: 'left' | 'right'): ItemConfig[] => {
-      const items: ItemConfig[] = [];
-      const positions: {cx: number, cy: number}[] = [];
-
-      roundAssets.forEach((asset, index) => {
-        let x = 0, y = 0, rotation = 0;
-        let isValid = false;
-        let attempts = 0;
-        const itemRadius = 11;
-        
-        while (!isValid && attempts < 500) {
-          x = Math.random() * (100 - itemRadius * 2);
-          y = Math.random() * (100 - itemRadius * 2);
-          rotation = Math.random() * 360;
-          isValid = true;
-
-          const cx = x + itemRadius;
-          const cy = y + itemRadius;
-          
-          const distFromCenter = (cx - 50) * (cx - 50) + (cy - 50) * (cy - 50);
-          if (distFromCenter > (50 - itemRadius) * (50 - itemRadius)) {
-            isValid = false;
-            attempts++;
-            continue;
-          }
-
-          for (const pos of positions) {
-            const dx = cx - pos.cx;
-            const dy = cy - pos.cy;
-            if (dx * dx + dy * dy < 400) {
-              isValid = false;
-              break;
-            }
-          }
-          attempts++;
-        }
-
-        positions.push({ cx: x + itemRadius, cy: y + itemRadius });
-        const isVisualTarget = side === targetSide && index === targetIndex;
-        const isCorrectItem = index === targetIndex;
-        
-        items.push({
-          id: index,
-          src: isVisualTarget ? asset.target : asset.normal,
-          alt: asset.alt,
-          cx: x + itemRadius,
-          cy: y + itemRadius,
-          x,
-          y,
-          rotation,
-          isTarget: isCorrectItem,
-        });
-      });
-      return items;
-    };
-
-    const newRound = {
-      leftItems: generateSideItems('left'),
-      rightItems: generateSideItems('right'),
-    };
-
-    setRoundConfig(newRound);
-    setGameState('playing');
-    setResultMessage(null);
-
-    broadcast({ type: 'ROUND_CONFIG', config: newRound });
-    broadcast({ type: 'GAME_STATE', state: 'playing' });
-  }, [broadcast]);
-
   const startGame = () => {
     setTimeLeft(durationMinutes * 60);
-    generateRound();
+    setGameState('playing');
+    broadcast({ type: 'GAME_STATE', state: 'playing' });
   };
 
   useEffect(() => {
@@ -210,9 +110,6 @@ const AdminView: React.FC = () => {
             const nextPlayers = [...prev, newPlayer];
             
             conn.send({ type: 'GAME_STATE', state: gameStateRef.current });
-            if (roundConfigRef.current) {
-              conn.send({ type: 'ROUND_CONFIG', config: roundConfigRef.current });
-            }
             if (timeLeftRef.current > 0) {
               conn.send({ type: 'TIMER_SYNC', timeLeft: timeLeftRef.current });
             }
@@ -222,32 +119,13 @@ const AdminView: React.FC = () => {
           });
         }
         
-        if (msg.type === 'ITEM_CLICKED' && gameStateRef.current === 'playing') {
-          if (msg.isTarget) {
-            setGameState('round_end');
-            
-            setPlayers(prev => {
-              const nextPlayers = prev.map(p => p.id === conn.peer ? { ...p, score: p.score + 1 } : p);
-              const winnerName = nextPlayers.find(p => p.id === conn.peer)?.name || 'Someone';
-              
-              setResultMessage({ title: `${winnerName} found it!`, isWin: true });
-              
-              nextPlayers.forEach(p => {
-                p.conn.send({ type: 'GAME_STATE', state: 'round_end' });
-                p.conn.send({ type: 'ROUND_RESULT', message: p.id === conn.peer ? '+1 Point!' : `${winnerName} scored!`, isWin: p.id === conn.peer });
-                p.conn.send({ type: 'LEADERBOARD', players: nextPlayers.map(np => ({ name: np.name, score: np.score })) });
-              });
-              
-              return nextPlayers;
-            });
-
-            // Auto advance to next round after 500ms
-            setTimeout(() => {
-              if (timeLeftRef.current > 0) {
-                generateRound();
-              }
-            }, 800); // Wait just under a second to show the winner message briefly
-          }
+        if (msg.type === 'SCORE_UPDATE' && gameStateRef.current === 'playing') {
+          setPlayers(prev => {
+            // Update score
+            const nextPlayers = prev.map(p => p.id === conn.peer ? { ...p, score: p.score + msg.points } : p);
+            broadcastLeaderboard(nextPlayers);
+            return nextPlayers;
+          });
         }
       });
 
@@ -263,7 +141,7 @@ const AdminView: React.FC = () => {
     return () => {
       peer.destroy();
     };
-  }, []);
+  }, [broadcastLeaderboard]);
 
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
@@ -343,6 +221,8 @@ const AdminView: React.FC = () => {
               <button className="btn-primary" onClick={() => {
                 setGameState('lobby');
                 broadcast({ type: 'GAME_STATE', state: 'lobby' });
+                // Reset scores
+                setPlayers(prev => prev.map(p => ({ ...p, score: 0 })));
               }} style={{ marginTop: '40px', fontSize: '1.5rem', padding: '15px 40px' }}>
                 Back to Lobby
               </button>
@@ -351,11 +231,6 @@ const AdminView: React.FC = () => {
             <div style={{ textAlign: 'center' }}>
               <h1 style={{ color: '#fff', fontSize: '4rem', marginBottom: '20px' }}>Game in Progress</h1>
               <p style={{ color: '#aaa', fontSize: '1.5rem' }}>Players are frantically finding items!</p>
-              {resultMessage && (
-                <div style={{ marginTop: '30px', padding: '20px', background: 'rgba(74, 222, 128, 0.2)', border: '2px solid #4ade80', borderRadius: '15px' }}>
-                  <h2 style={{ color: '#4ade80', margin: 0, fontSize: '2rem' }}>{resultMessage.title}</h2>
-                </div>
-              )}
             </div>
           )}
         </div>

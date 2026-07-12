@@ -1,9 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
 import type { GameState, HostMessage, RoundConfig, PlayerScore } from './types';
 import GameView from './GameView';
 import { Clock } from 'lucide-react';
+import { generateRandomRound } from './gameLogic';
 
 interface PlayerJoinProps {
   initialCode?: string;
@@ -23,11 +24,19 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
   
   const [gameState, setGameState] = useState<GameState>('lobby');
   const [roundConfig, setRoundConfig] = useState<RoundConfig | null>(null);
-  const [resultMessage, setResultMessage] = useState<{ title: string; isWin: boolean } | null>(null);
+  const [overlayMessage, setOverlayMessage] = useState<{ title: string; isWin: boolean } | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [finalLeaderboard, setFinalLeaderboard] = useState<PlayerScore[]>([]);
   
   const connRef = useRef<DataConnection | null>(null);
+
+  useEffect(() => {
+    // Generate the first round as soon as the game starts
+    if (gameState === 'playing' && !roundConfig) {
+      setRoundConfig(generateRandomRound());
+      setOverlayMessage(null);
+    }
+  }, [gameState, roundConfig]);
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,14 +61,13 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
           case 'GAME_STATE':
             setGameState(msg.state);
             if (msg.state === 'playing') {
-              setResultMessage(null); // Clear previous result
+              setRoundConfig(generateRandomRound());
+              setOverlayMessage(null);
+            } else if (msg.state === 'lobby') {
+              setRoundConfig(null);
+              setOverlayMessage(null);
+              setTimeLeft(null);
             }
-            break;
-          case 'ROUND_CONFIG':
-            setRoundConfig(msg.config);
-            break;
-          case 'ROUND_RESULT':
-            setResultMessage({ title: msg.message, isWin: msg.isWin });
             break;
           case 'TIMER_SYNC':
             setTimeLeft(msg.timeLeft);
@@ -85,10 +93,25 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
 
   const handleItemClick = (isTarget: boolean, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (gameState !== 'playing' || !connRef.current) return;
+    if (gameState !== 'playing' || !connRef.current || overlayMessage) return;
     
-    // Send click to host, host will broadcast ROUND_RESULT and auto-advance
-    connRef.current.send({ type: 'ITEM_CLICKED', isTarget });
+    if (isTarget) {
+      setOverlayMessage({ title: 'Right Answer! +1 Point', isWin: true });
+      connRef.current.send({ type: 'SCORE_UPDATE', points: 1 });
+      
+      // Auto advance locally
+      setTimeout(() => {
+        setRoundConfig(generateRandomRound());
+        setOverlayMessage(null);
+      }, 500);
+    } else {
+      setOverlayMessage({ title: 'Wrong answer', isWin: false });
+      
+      // Hide message, but don't change board
+      setTimeout(() => {
+        setOverlayMessage(null);
+      }, 500);
+    }
   };
 
   if (status === 'connected') {
@@ -140,7 +163,7 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
             roundConfig={roundConfig}
             onItemClick={handleItemClick}
             gameState={gameState}
-            resultMessage={resultMessage}
+            resultMessage={overlayMessage}
             isHost={false}
           />
         </div>
