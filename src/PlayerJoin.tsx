@@ -127,7 +127,7 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
       
       if (!playerRecord || myScore === 0) {
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', padding: '20px', textAlign: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', padding: '20px', textAlign: 'center' }}>
             <h1 style={{ color: '#EF6C00', fontSize: '3rem', marginBottom: '20px' }}>Round Over</h1>
             <h2 style={{ color: '#fff', marginBottom: '10px' }}>{playerName}</h2>
             <p style={{ marginTop: '20px', color: '#aaa', fontSize: '1.2rem' }}>Waiting for the host to start the next round...</p>
@@ -136,7 +136,7 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
       }
 
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', padding: '20px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', padding: '20px', textAlign: 'center' }}>
           <h1 style={{ color: '#EF6C00', fontSize: '3rem', marginBottom: '10px' }}>Time's Up!</h1>
           <h2 style={{ color: '#fff' }}>{playerName}</h2>
           <h1 style={{ color: '#FFC107', fontSize: '4rem', margin: '20px 0' }}>{myScore} <span style={{ fontSize: '1.5rem', color: '#aaa' }}>pts</span></h1>
@@ -148,7 +148,7 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
 
     if (gameState === 'starting' && countdownValue !== null) {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', padding: '20px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', padding: '20px', textAlign: 'center' }}>
           <h1 style={{ color: '#fff', fontSize: '3rem', marginBottom: '20px' }}>GET READY!</h1>
           <div style={{ fontSize: '8rem', color: '#FFC107', fontWeight: 'bold', textShadow: '0 0 20px rgba(255, 193, 7, 0.5)' }}>
             {countdownValue}
@@ -159,7 +159,7 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
 
     if (roundConfig) {
       return (
-        <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+        <div style={{ position: 'relative', width: '100vw', height: '100dvh', overflow: 'hidden' }}>
           {/* Mobile Timer Overlay */}
           {timeLeft !== null && (gameState === 'playing' || gameState === 'round_end') && (
             <div style={{
@@ -196,7 +196,7 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
     }
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111' }}>
         <h2>Connected!</h2>
         <p style={{ opacity: 0.8, marginTop: '1rem' }}>Waiting for the host to start the game...</p>
       </div>
@@ -204,7 +204,7 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', padding: '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', padding: '20px' }}>
       <div style={{ backgroundColor: '#222', padding: '30px', borderRadius: '15px', width: '100%', maxWidth: '400px', border: '2px solid #333' }}>
         <h1 style={{ marginBottom: '20px', textAlign: 'center', color: '#FF9800' }}>Join Lobby</h1>
         

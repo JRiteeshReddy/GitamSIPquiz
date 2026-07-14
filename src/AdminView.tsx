@@ -180,7 +180,7 @@ const AdminView: React.FC = () => {
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', backgroundColor: '#111' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100vw', backgroundColor: '#111' }}>
       
       {/* Admin Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', backgroundColor: '#222', borderBottom: '2px solid #333' }}>
