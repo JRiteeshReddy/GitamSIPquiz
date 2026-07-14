@@ -1,10 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
 
 :root {
-  --red-bg: #FC665F;
-  --blue-bg: #1CBDF9;
-  --plate-bg: rgba(255, 255, 255, 0.6);
-  --plate-border: #000000;
+  --hive-yellow: #FFC107;
+  --honey-gold: #FFB300;
+  --amber: #FF9800;
+  --deep-orange: #F57C00;
+  --burnt-orange: #EF6C00;
+
+  --red-bg: var(--burnt-orange);
+  --blue-bg: var(--honey-gold);
+  --plate-bg: rgba(255, 255, 255, 0.7);
+  --plate-border: var(--deep-orange);
   --text-color: #ffffff;
 }
 
@@ -212,36 +218,38 @@ body {
 }
 
 .message-title.win {
-  color: #4ade80;
-  text-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
+  color: var(--hive-yellow);
+  text-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
 }
 
 .message-title.lose {
-  color: #f87171;
-  text-shadow: 0 0 20px rgba(248, 113, 113, 0.5);
+  color: var(--burnt-orange);
+  text-shadow: 0 0 20px rgba(239, 108, 0, 0.5);
 }
 
+/* Primary Action Button */
 .btn-primary {
-  background: #ffffff;
-  color: #111;
+  background: linear-gradient(135deg, var(--honey-gold), var(--amber));
+  color: #fff;
   border: none;
-  padding: 1rem 2rem;
-  font-size: 1.5rem;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1.1rem;
   font-weight: 600;
-  border-radius: 50px;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(255,255,255,0.2);
-  font-family: 'Outfit', sans-serif;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 179, 0, 0.3);
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--amber), var(--deep-orange));
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255,255,255,0.3);
+  box-shadow: 0 6px 16px rgba(255, 152, 0, 0.4);
 }
 
-.btn-primary:active {
-  transform: translateY(1px);
+.btn-primary:active:not(:disabled) {
+  background: linear-gradient(135deg, var(--deep-orange), var(--burnt-orange));
+  transform: translateY(0);
 }
 
 /* Score Board */

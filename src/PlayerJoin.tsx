@@ -126,10 +126,10 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
       
       return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', padding: '20px', textAlign: 'center' }}>
-          <h1 style={{ color: '#FC665F', fontSize: '3rem', marginBottom: '10px' }}>Time's Up!</h1>
+          <h1 style={{ color: '#EF6C00', fontSize: '3rem', marginBottom: '10px' }}>Time's Up!</h1>
           <h2 style={{ color: '#fff' }}>{playerName}</h2>
-          <h1 style={{ color: '#4ade80', fontSize: '4rem', margin: '20px 0' }}>{myScore} <span style={{ fontSize: '1.5rem', color: '#aaa' }}>pts</span></h1>
-          {rank > 0 && <h3 style={{ color: '#1CBDF9' }}>Rank #{rank}</h3>}
+          <h1 style={{ color: '#FFC107', fontSize: '4rem', margin: '20px 0' }}>{myScore} <span style={{ fontSize: '1.5rem', color: '#aaa' }}>pts</span></h1>
+          {rank > 0 && <h3 style={{ color: '#FF9800' }}>Rank #{rank}</h3>}
           <p style={{ marginTop: '40px', color: '#666' }}>Look at the big screen for the final results.</p>
         </div>
       );
@@ -139,7 +139,7 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', padding: '20px', textAlign: 'center' }}>
           <h1 style={{ color: '#fff', fontSize: '3rem', marginBottom: '20px' }}>GET READY!</h1>
-          <div style={{ fontSize: '8rem', color: '#4ade80', fontWeight: 'bold', textShadow: '0 0 20px rgba(74,222,128,0.5)' }}>
+          <div style={{ fontSize: '8rem', color: '#FFC107', fontWeight: 'bold', textShadow: '0 0 20px rgba(255, 193, 7, 0.5)' }}>
             {countdownValue}
           </div>
         </div>
@@ -160,11 +160,11 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
               background: 'rgba(0, 0, 0, 0.6)',
               padding: '8px 20px',
               borderRadius: '20px',
-              color: timeLeft <= 10 ? '#FC665F' : '#fff',
+              color: timeLeft <= 10 ? '#EF6C00' : '#fff',
               fontSize: '1.5rem',
               fontWeight: 'bold',
               backdropFilter: 'blur(5px)',
-              border: `1px solid ${timeLeft <= 10 ? '#FC665F' : '#444'}`,
+              border: `1px solid ${timeLeft <= 10 ? '#EF6C00' : '#444'}`,
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
@@ -195,7 +195,7 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', padding: '20px' }}>
       <div style={{ backgroundColor: '#222', padding: '30px', borderRadius: '15px', width: '100%', maxWidth: '400px', border: '2px solid #333' }}>
-        <h1 style={{ marginBottom: '20px', textAlign: 'center', color: '#1CBDF9' }}>Join Lobby</h1>
+        <h1 style={{ marginBottom: '20px', textAlign: 'center', color: '#FF9800' }}>Join Lobby</h1>
         
         <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <div>
@@ -224,7 +224,7 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
             />
           </div>
 
-          {status === 'error' && <p style={{ color: '#FC665F', textAlign: 'center' }}>{errorMsg}</p>}
+          {status === 'error' && <p style={{ color: '#EF6C00', textAlign: 'center' }}>{errorMsg}</p>}
 
           <button 
             type="submit" 

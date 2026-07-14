@@ -30,9 +30,9 @@ function App() {
     <>
       <Preloader />
       {isAdmin ? <AdminView /> : <PlayerJoin initialCode={initialCode || ''} />}
-      <div style={{ position: 'fixed', bottom: '15px', right: '15px', display: 'flex', alignItems: 'center', gap: '8px', zIndex: 9999, pointerEvents: 'none' }}>
-        <span style={{ color: '#aaa', fontSize: '0.9rem', fontWeight: 600 }}>Built by</span>
-        <img src="/img/HIVE logo.png" alt="HIVE" style={{ height: '25px', opacity: 0.8 }} />
+      <div style={{ position: 'fixed', bottom: '15px', right: '15px', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 9999, pointerEvents: 'none' }}>
+        <span style={{ color: '#aaa', fontSize: '1.2rem', fontWeight: 600 }}>Built by</span>
+        <img src="/img/HIVE logo.png" alt="HIVE" style={{ height: '50px', opacity: 0.9 }} />
       </div>
     </>
   );

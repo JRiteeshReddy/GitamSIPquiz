@@ -176,7 +176,7 @@ const AdminView: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div>
             <h2 style={{ margin: 0, color: '#fff' }}>Admin Panel</h2>
-            <p style={{ margin: 0, color: '#aaa' }}>Lobby Code: <strong style={{ fontSize: '1.5rem', color: '#ff3366', letterSpacing: '2px' }}>{lobbyCode}</strong></p>
+            <p style={{ margin: 0, color: '#aaa' }}>Lobby Code: <strong style={{ fontSize: '1.5rem', color: '#FFB300', letterSpacing: '2px' }}>{lobbyCode}</strong></p>
           </div>
           {lobbyCode && (
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -215,7 +215,7 @@ const AdminView: React.FC = () => {
           )}
           {(gameState === 'playing' || gameState === 'starting' || gameState === 'round_end') && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '2rem', fontWeight: 'bold', color: timeLeft <= 10 ? '#FC665F' : '#fff' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '2rem', fontWeight: 'bold', color: timeLeft <= 10 ? '#EF6C00' : '#fff' }}>
                 <Clock size={28} />
                 {gameState === 'starting' ? '--:--' : formatTime(timeLeft)}
               </div>
@@ -226,7 +226,7 @@ const AdminView: React.FC = () => {
                   setGameState('game_over');
                   broadcast({ type: 'GAME_STATE', state: 'game_over' });
                 }} 
-                style={{ backgroundColor: '#FC665F', padding: '8px 16px', fontSize: '1rem' }}
+                style={{ backgroundColor: '#EF6C00', padding: '8px 16px', fontSize: '1rem' }}
               >
                 End Game
               </button>
@@ -243,21 +243,21 @@ const AdminView: React.FC = () => {
           {gameState === 'lobby' ? (
             <div style={{ textAlign: 'center' }}>
               <h1 style={{ color: '#fff', fontSize: '3rem', marginBottom: '20px' }}>Ready to Start?</h1>
-              <p style={{ color: '#aaa', fontSize: '1.5rem' }}>Tell players to join using code <strong style={{ color: '#1CBDF9' }}>{lobbyCode}</strong></p>
+              <p style={{ color: '#aaa', fontSize: '1.5rem' }}>Tell players to join using code <strong style={{ color: '#FFC107' }}>{lobbyCode}</strong></p>
             </div>
           ) : gameState === 'starting' ? (
             <div style={{ textAlign: 'center' }}>
               <h1 style={{ color: '#fff', fontSize: '4rem', marginBottom: '20px' }}>Get Ready!</h1>
-              <div style={{ fontSize: '10rem', color: '#4ade80', fontWeight: 'bold', textShadow: '0 0 20px rgba(74,222,128,0.5)' }}>
+              <div style={{ fontSize: '10rem', color: '#FFC107', fontWeight: 'bold', textShadow: '0 0 20px rgba(255, 193, 7, 0.5)' }}>
                 {countdownValue}
               </div>
             </div>
           ) : gameState === 'game_over' ? (
             <div style={{ textAlign: 'center' }}>
-              <h1 style={{ fontSize: '5rem', color: '#FC665F', marginBottom: '20px' }}>Time's Up!</h1>
+              <h1 style={{ fontSize: '5rem', color: '#EF6C00', marginBottom: '20px' }}>Time's Up!</h1>
               {sortedPlayers.length > 0 && (
                 <div>
-                  <h2 style={{ fontSize: '3rem', color: '#4ade80', marginBottom: '10px' }}>Winner: {sortedPlayers[0].name}</h2>
+                  <h2 style={{ fontSize: '3rem', color: '#FFC107', marginBottom: '10px' }}>Winner: {sortedPlayers[0].name}</h2>
                   <p style={{ fontSize: '2rem', color: '#aaa' }}>with {sortedPlayers[0].score} points!</p>
                 </div>
               )}
@@ -288,12 +288,12 @@ const AdminView: React.FC = () => {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               {sortedPlayers.map((p, idx) => (
-                <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', backgroundColor: idx === 0 ? 'rgba(74, 222, 128, 0.1)' : '#2a2a2a', border: idx === 0 ? '1px solid #4ade80' : '1px solid transparent', borderRadius: '10px', transition: 'all 0.3s' }}>
+                <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', backgroundColor: idx === 0 ? 'rgba(255, 193, 7, 0.1)' : '#2a2a2a', border: idx === 0 ? '1px solid #FFC107' : '1px solid transparent', borderRadius: '10px', transition: 'all 0.3s' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: idx === 0 ? '#4ade80' : '#888' }}>#{idx+1}</span>
+                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: idx === 0 ? '#FFC107' : '#888' }}>#{idx+1}</span>
                     <span style={{ fontSize: '1.2rem', color: '#fff' }}>{p.name}</span>
                   </div>
-                  <strong style={{ color: '#1CBDF9', fontSize: '1.5rem' }}>{p.score}</strong>
+                  <strong style={{ color: '#FFC107', fontSize: '1.5rem' }}>{p.score}</strong>
                 </div>
               ))}
             </div>
