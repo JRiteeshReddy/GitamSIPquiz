@@ -88,10 +88,6 @@ body {
   align-items: center;
   justify-content: center;
 }
-.screen-half.right {
-  justify-content: flex-start;
-}
-
 /* Admin QR Buttons */
 .admin-action-btn {
   display: flex;

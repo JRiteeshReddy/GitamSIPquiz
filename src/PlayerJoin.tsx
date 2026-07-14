@@ -153,9 +153,9 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
           {timeLeft !== null && (gameState === 'playing' || gameState === 'round_end') && (
             <div style={{
               position: 'absolute',
-              top: '20px',
+              top: '50%',
               left: '50%',
-              transform: 'translateX(-50%)',
+              transform: 'translate(-50%, -50%)',
               zIndex: 1000,
               background: 'rgba(0, 0, 0, 0.6)',
               padding: '8px 20px',
