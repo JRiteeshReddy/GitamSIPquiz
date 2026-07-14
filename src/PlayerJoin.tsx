@@ -121,9 +121,20 @@ const PlayerJoin: React.FC<PlayerJoinProps> = ({ initialCode = '' }) => {
 
   if (status === 'connected') {
     if (gameState === 'game_over') {
-      const myScore = finalLeaderboard.find(p => p.name === playerName)?.score || 0;
-      const rank = finalLeaderboard.findIndex(p => p.name === playerName) + 1;
+      const playerRecord = finalLeaderboard.find(p => p.name === playerName);
+      const myScore = playerRecord?.score || 0;
+      const rank = playerRecord ? finalLeaderboard.findIndex(p => p.name === playerName) + 1 : 0;
       
+      if (!playerRecord || myScore === 0) {
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', padding: '20px', textAlign: 'center' }}>
+            <h1 style={{ color: '#EF6C00', fontSize: '3rem', marginBottom: '20px' }}>Round Over</h1>
+            <h2 style={{ color: '#fff', marginBottom: '10px' }}>{playerName}</h2>
+            <p style={{ marginTop: '20px', color: '#aaa', fontSize: '1.2rem' }}>Waiting for the host to start the next round...</p>
+          </div>
+        );
+      }
+
       return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', padding: '20px', textAlign: 'center' }}>
           <h1 style={{ color: '#EF6C00', fontSize: '3rem', marginBottom: '10px' }}>Time's Up!</h1>

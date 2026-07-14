@@ -116,6 +116,17 @@ const AdminView: React.FC = () => {
     broadcast({ type: 'COUNTDOWN_SYNC', count: 5 });
   };
 
+  const resetToLobby = () => {
+    setPlayers(prev => {
+      const nextPlayers = prev.map(p => ({ ...p, score: 0 }));
+      const leaderboard: PlayerScore[] = nextPlayers.map(p => ({ name: p.name, score: p.score }));
+      nextPlayers.forEach(p => p.conn.send({ type: 'LEADERBOARD', players: leaderboard }));
+      return nextPlayers;
+    });
+    setGameState('lobby');
+    broadcast({ type: 'GAME_STATE', state: 'lobby' });
+  };
+
   useEffect(() => {
     const code = generateRandomCode();
     setLobbyCode(code);
@@ -261,14 +272,11 @@ const AdminView: React.FC = () => {
                   <p style={{ fontSize: '2rem', color: '#aaa' }}>with {sortedPlayers[0].score} points!</p>
                 </div>
               )}
-              <button className="btn-primary" onClick={() => {
-                setGameState('lobby');
-                broadcast({ type: 'GAME_STATE', state: 'lobby' });
-                // Reset scores
-                setPlayers(prev => prev.map(p => ({ ...p, score: 0 })));
-              }} style={{ marginTop: '40px', fontSize: '1.5rem', padding: '15px 40px' }}>
-                Back to Lobby
-              </button>
+              <div style={{ marginTop: '40px' }}>
+                <button className="btn-primary" onClick={resetToLobby} style={{ fontSize: '1.5rem', padding: '15px 40px' }}>
+                  Return to Lobby
+                </button>
+              </div>
             </div>
           ) : (
             <div style={{ textAlign: 'center' }}>
